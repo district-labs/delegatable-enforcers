@@ -30,7 +30,10 @@ const config: HardhatUserConfig = {
     paths: [
       '@delegatable/delegatable-sol/contracts/Delegatable.sol',
       '@delegatable/delegatable-sol/contracts/DelegatableCore.sol',
+      '@delegatable/delegatable-sol/contracts/CaveatEnforcer.sol',
       '@delegatable/delegatable-sol/contracts/extensions/ERC20Delegatable.sol',
+      '@delegatable/delegatable-sol/contracts/libraries/BytesLib.sol',
+      '@delegatable/delegatable-sol/contracts/libraries/ECRecovery.sol',
     ],
   },
   etherscan: {

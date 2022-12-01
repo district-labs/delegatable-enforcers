@@ -2,9 +2,8 @@
 pragma solidity 0.8.15;
 
 import "@district-labs/uniswap-oracle/contracts/interfaces/IDistrictUniswapV3Oracle.sol";
-import { BytesLib } from "../libraries/BytesLib.sol";
-import "../CaveatEnforcer.sol";
-import "hardhat/console.sol";
+import { BytesLib } from "@delegatable/delegatable-sol/contracts/libraries/BytesLib.sol";
+import { CaveatEnforcer, Transaction } from "@delegatable/delegatable-sol/contracts/CaveatEnforcer.sol";
 
 contract DistrictUniswapV3TwapAboveEnforcer is CaveatEnforcer {
   IDistrictUniswapV3Oracle public immutable oracle;
@@ -30,7 +29,7 @@ contract DistrictUniswapV3TwapAboveEnforcer is CaveatEnforcer {
     // 1. unpack the terms
     uint32 secondsAgo = BytesLib.toUint32(terms, 0);
     uint8 tickSign = BytesLib.toUint8(terms, 4);
-    uint24 unsignedTickThreshold = BytesLib.toUint24(terms, 5); // next 8
+    uint24 unsignedTickThreshold = _toUint24(terms, 5); // next 8
     int24 tickThreshold;
     if (tickSign == 0) {
       // we ok with negatives due to MIN/MAX_TICK set by uni
@@ -42,7 +41,7 @@ contract DistrictUniswapV3TwapAboveEnforcer is CaveatEnforcer {
     }
     address tokenA = BytesLib.toAddress(terms, 8);
     address tokenB = BytesLib.toAddress(terms, 28);
-    uint24 fee = BytesLib.toUint24(terms, 48);
+    uint24 fee = _toUint24(terms, 48);
     // 2. get the price from uni
     int24 uniswapTwapTick = getPoolArithmeticMeanTick(tokenA, tokenB, fee, secondsAgo);
 
@@ -51,5 +50,14 @@ contract DistrictUniswapV3TwapAboveEnforcer is CaveatEnforcer {
     } else {
       revert("DistrictUniswapV3TwapAboveEnforcer:tickThreshold <= uniswapTwapTick");
     }
+  }
+
+  function _toUint24(bytes memory _bytes, uint256 _start) internal pure returns (uint24) {
+    require(_bytes.length >= _start + 3, "_toUint24_outOfBounds");
+    uint24 tempUint;
+    assembly {
+      tempUint := mload(add(add(_bytes, 0x3), _start))
+    }
+    return tempUint;
   }
 }
