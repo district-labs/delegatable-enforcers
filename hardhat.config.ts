@@ -27,7 +27,11 @@ const config: HardhatUserConfig = {
     target: 'ethers-v5',
   },
   dependencyCompiler: {
-    paths: [],
+    paths: [
+      '@delegatable/delegatable-sol/contracts/Delegatable.sol',
+      '@delegatable/delegatable-sol/contracts/DelegatableCore.sol',
+      '@delegatable/delegatable-sol/contracts/extensions/ERC20Delegatable.sol',
+    ],
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
