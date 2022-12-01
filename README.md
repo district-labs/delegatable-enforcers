@@ -1,7 +1,7 @@
-# Smart Contracts Boilerplate for Hardhat
+# District Delegatable Enforcer Catalog
 
-![Test](https://github.com/turbo-eth/template-hardhat-sol/actions/workflows/test.yml/badge.svg)
-![Coverage](https://github.com/turbo-eth/template-hardhat-sol/actions/workflows/coverage.yml/badge.svg)
+![Test](https://github.com/district-labs/delegatable-enforcers/actions/workflows/test.yml/badge.svg)
+![Coverage](https://github.com/district-labs/delegatable-enforcers/actions/workflows/coverage.yml/badge.svg)
 ![TS](https://badgen.net/badge/-/TypeScript?icon=typescript&label&labelColor=blue&color=555555)
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](http://perso.crans.org/besson/LICENSE.html)
 
