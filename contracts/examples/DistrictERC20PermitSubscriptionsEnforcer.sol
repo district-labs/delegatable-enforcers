@@ -9,7 +9,7 @@ import "@delegatable/delegatable-sol/contracts/Delegatable.sol";
 import "hardhat/console.sol";
 
 contract DistrictERC20PermitSubscriptionsEnforcer is CaveatEnforcer {
-  mapping(bytes32 => uint256) public lastTimestamp;
+  mapping(bytes32 => uint64) public lastTimestamp;
 
   function enforceCaveat(
     bytes calldata terms,
@@ -20,7 +20,7 @@ contract DistrictERC20PermitSubscriptionsEnforcer is CaveatEnforcer {
     bytes4 _allowedSig = 0x97e18d6e;
     require(targetSig == _allowedSig, "DistrictERC20SubscriptionsEnforcer:invalid-method");
     uint64 _subPeriod = BytesLib.toUint64(terms, 0);
-    uint256 _currentTime = block.timestamp;
+    uint64 _currentTime = uint64(block.timestamp);
     require(
       lastTimestamp[delegationHash] + _subPeriod < _currentTime,
       "DistrictERC20SubscriptionsEnforcer:invalid-subscritpion-time"
