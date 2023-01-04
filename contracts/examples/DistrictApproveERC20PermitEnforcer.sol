@@ -9,7 +9,6 @@ import "@delegatable/delegatable-sol/contracts/Delegatable.sol";
 import "hardhat/console.sol";
 
 contract DistrictApproveERC20PermitEnforcer is CaveatEnforcer {
-
   function enforceCaveat(
     bytes calldata terms,
     Transaction calldata transaction,
