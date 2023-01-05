@@ -86,8 +86,6 @@ describe('DistrictERC20SubscriptionsEnforcer', () => {
   before(async () => {
     [signer0, signer1] = await getSigners();
     [wallet0, wallet1] = getPrivateKeys(signer0.provider as unknown as Provider); //
-    console.log(signer0.address);
-    console.log(wallet0.address);
     verifyingContractFactory = await ethers.getContractFactory(
       'VerifyingContractERC20PermitSubscriptions',
     );
@@ -100,8 +98,8 @@ describe('DistrictERC20SubscriptionsEnforcer', () => {
     );
     pk0 = wallet0._signingKey().privateKey;
     pk1 = wallet1._signingKey().privateKey;
-    console.log(pk0);
   });
+
   beforeEach(async () => {
     await network.provider.request({
       method: 'hardhat_reset',
