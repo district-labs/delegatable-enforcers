@@ -5,12 +5,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol";
 import "@delegatable/delegatable-sol/contracts/Delegatable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "hardhat/console.sol";
 
 contract VerifyingContractERC20PermitSubscriptions is Delegatable, Ownable {
   address public immutable subToken;
   uint256 public immutable subAmount;
-  mapping(address => bool) public isDisabled;
 
   constructor(
     string memory name,
@@ -29,6 +27,7 @@ contract VerifyingContractERC20PermitSubscriptions is Delegatable, Ownable {
     bytes32 r,
     bytes32 s
   ) external {
+    require(msg.sender == address(this), "VerifyingContract:invalid-sender");
     IERC20Permit(subToken).permit(
       subscriber,
       address(this),
@@ -42,7 +41,6 @@ contract VerifyingContractERC20PermitSubscriptions is Delegatable, Ownable {
 
   function paySubscription() external {
     require(msg.sender == address(this), "VerifyingContract:invalid-sender");
-    require(!isDisabled[_msgSender()], "VerifyingContract:disabled-subscription");
     IERC20(subToken).transferFrom(_msgSender(), address(this), subAmount);
   }
 
@@ -52,14 +50,6 @@ contract VerifyingContractERC20PermitSubscriptions is Delegatable, Ownable {
     uint256 _amount
   ) public onlyOwner {
     IERC20(_token).transfer(_to, _amount);
-  }
-
-  function disableSubscription() external {
-    isDisabled[_msgSender()] = true;
-  }
-
-  function enableSubscription() external {
-    isDisabled[_msgSender()] = false;
   }
 
   function _msgSender() internal view override(DelegatableCore, Context) returns (address sender) {
