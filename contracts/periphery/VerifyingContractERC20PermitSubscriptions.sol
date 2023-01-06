@@ -41,6 +41,7 @@ contract VerifyingContractERC20PermitSubscriptions is Delegatable, Ownable {
   }
 
   function paySubscription() external {
+    require(msg.sender == address(this), "VerifyingContract:invalid-sender");
     require(!isDisabled[_msgSender()], "VerifyingContract:disabled-subscription");
     IERC20(subToken).transferFrom(_msgSender(), address(this), subAmount);
   }
