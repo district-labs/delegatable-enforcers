@@ -5,14 +5,14 @@ import { BytesLib } from "@delegatable/delegatable-sol/contracts/libraries/Bytes
 import { CaveatEnforcer, Transaction } from "@delegatable/delegatable-sol/contracts/CaveatEnforcer.sol";
 import "@delegatable/delegatable-sol/contracts/Delegatable.sol";
 
-contract DistrictERC20PermitSubscriptionsEnforcer is CaveatEnforcer, Delegatable {
+interface IVerifier {
+  function getSubPeriod() external returns(uint64);
+}
+
+contract DistrictERC20PermitSubscriptionsEnforcer is 
+  CaveatEnforcer, Delegatable("DistrictERC20PermitSubscriptionsEnforcer", "1") {
   mapping(bytes32 => bool) public isCanceled;
   mapping(bytes32 => uint256) public lastTimestamp;
-  uint64 public immutable subPeriod;
-
-  constructor(string memory name, uint64 _subPeriod) Delegatable(name, "1") {
-    subPeriod = _subPeriod;
-  }
 
   function enforceCaveat(
     bytes calldata terms,
@@ -26,7 +26,8 @@ contract DistrictERC20PermitSubscriptionsEnforcer is CaveatEnforcer, Delegatable
     bytes4 targetSig = bytes4(transaction.data[0:4]);
     bytes4 _allowedSig = 0x97e18d6e;
     require(targetSig == _allowedSig, "DistrictERC20SubscriptionsEnforcer:invalid-method");
-    uint64 _subPeriod = subPeriod;
+    address _verifier = BytesLib.toAddress(terms, 0);
+    uint64 _subPeriod = IVerifier(_verifier).getSubPeriod();
     uint64 _currentTime = uint64(block.timestamp);
     require(
       lastTimestamp[delegationHash] + _subPeriod < _currentTime,
@@ -41,19 +42,8 @@ contract DistrictERC20PermitSubscriptionsEnforcer is CaveatEnforcer, Delegatable
     return true;
   }
 
-  function renewSubscription(SignedDelegation calldata signedDelegation, bytes32 domainHash)
-    public
-  {
-    address signer = verifyExternalDelegationSignature(signedDelegation, domainHash);
-    address sender = _msgSender();
-    require(signer == sender, "DistrictERC20SubscriptionsEnforcer:no-renew-permission");
-    bytes32 delegationHash = GET_SIGNEDDELEGATION_PACKETHASH(signedDelegation);
-    isCanceled[delegationHash] = false;
-    lastTimestamp[delegationHash] = 0;
-  }
-
   function cancelSubscription(SignedDelegation calldata signedDelegation, bytes32 domainHash)
-    public
+    external
   {
     address signer = verifyExternalDelegationSignature(signedDelegation, domainHash);
     address sender = _msgSender();
