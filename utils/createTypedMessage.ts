@@ -8,6 +8,7 @@ export function createTypedMessage(
   primaryType: string
 ) {
   const chainId = contract.deployTransaction.chainId;
+
   return {
     data: {
       types,
@@ -15,7 +16,7 @@ export function createTypedMessage(
       domain: {
         name: contractName,
         version: "1",
-        chainId: 31337,
+        chainId: chainId,
         verifyingContract: contract.address,
       },
       message,

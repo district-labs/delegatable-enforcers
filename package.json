@@ -62,7 +62,7 @@
     "prettier-plugin-solidity": "1.0.0-beta.19",
     "solc": "0.8.13",
     "solhint": "3.3.6",
-    "solidity-coverage": "0.7.18",
+    "solidity-coverage": "0.8.0",
     "solidity-docgen": "0.5.16",
     "ts-generator": "0.1.1",
     "ts-node": "^10.8.1",
@@ -78,6 +78,7 @@
     "deploy/**"
   ],
   "dependencies": {
+    "@chainlink/contracts": "^0.5.1",
     "@delegatable/delegatable-sol": "0.0.0-beta.0",
     "@district-labs/uniswap-oracle": "^1.0.2",
     "@ethersproject/providers": "^5.7.2",
