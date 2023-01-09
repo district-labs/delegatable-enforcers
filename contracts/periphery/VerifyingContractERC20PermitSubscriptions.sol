@@ -9,14 +9,21 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract VerifyingContractERC20PermitSubscriptions is Delegatable, Ownable {
   address public immutable subToken;
   uint256 public immutable subAmount;
+  uint64 public immutable subPeriod;
 
   constructor(
     string memory name,
     address _subToken,
-    uint256 _subAmount
+    uint256 _subAmount,
+    uint64 _subPeriod
   ) Delegatable(name, "1") {
     subToken = _subToken;
     subAmount = _subAmount;
+    subPeriod = _subPeriod;
+  }
+
+  function getSubPeriod() public view returns (uint64) {
+    return subPeriod;
   }
 
   function approveSubscription(
