@@ -44,9 +44,9 @@ contract DistrictERC20PermitSubscriptionsEnforcer is
     return true;
   }
 
-  function encodeTerms(address verifier, uint8 salt) pure external returns(bytes) {
-        return abi.encodePacked(verifier, salt);
-    }
+  function encodeTerms(address verifier, uint8 salt) external pure returns (bytes memory) {
+    return abi.encodePacked(verifier, salt);
+  }
 
   function cancelSubscription(SignedDelegation calldata signedDelegation, bytes32 domainHash)
     external
