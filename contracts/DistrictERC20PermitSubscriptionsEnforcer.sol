@@ -6,11 +6,13 @@ import { CaveatEnforcer, Transaction } from "@delegatable/delegatable-sol/contra
 import "@delegatable/delegatable-sol/contracts/Delegatable.sol";
 
 interface IVerifier {
-  function getSubPeriod() external returns(uint64);
+  function getSubPeriod() external returns (uint64);
 }
 
-contract DistrictERC20PermitSubscriptionsEnforcer is 
-  CaveatEnforcer, Delegatable("DistrictERC20PermitSubscriptionsEnforcer", "1") {
+contract DistrictERC20PermitSubscriptionsEnforcer is
+  CaveatEnforcer,
+  Delegatable("DistrictERC20PermitSubscriptionsEnforcer", "1")
+{
   mapping(bytes32 => bool) public isCanceled;
   mapping(bytes32 => uint256) public lastTimestamp;
 
@@ -41,6 +43,10 @@ contract DistrictERC20PermitSubscriptionsEnforcer is
     lastTimestamp[delegationHash] += _subPeriod;
     return true;
   }
+
+  function encodeTerms(address verifier, uint8 salt) pure external returns(bytes) {
+        return abi.encodePacked(verifier, salt);
+    }
 
   function cancelSubscription(SignedDelegation calldata signedDelegation, bytes32 domainHash)
     external
