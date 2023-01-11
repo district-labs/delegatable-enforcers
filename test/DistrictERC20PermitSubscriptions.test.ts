@@ -81,8 +81,6 @@ describe('DistrictERC20SubscriptionsEnforcer', () => {
   let pk1: string;
   let districtERC20SubscriptionsEnforcer: Contract;
   let districtERC20SubscriptionsEnforcerFactory: ContractFactory;
-  let districtApproveERC20PermitEnforcer: Contract;
-  let districtApproveERC20PermitEnforcerFactory: ContractFactory;
 
   before(async () => {
     [signer0, signer1] = await getSigners();
@@ -93,9 +91,6 @@ describe('DistrictERC20SubscriptionsEnforcer', () => {
     erc20PermitTokenFactory = await ethers.getContractFactory('TokenPermit');
     districtERC20SubscriptionsEnforcerFactory = await ethers.getContractFactory(
       'DistrictERC20PermitSubscriptionsEnforcer',
-    );
-    districtApproveERC20PermitEnforcerFactory = await ethers.getContractFactory(
-      'DistrictApproveERC20PermitEnforcer',
     );
     pk0 = wallet0._signingKey().privateKey;
     pk1 = wallet1._signingKey().privateKey;
@@ -119,10 +114,6 @@ describe('DistrictERC20SubscriptionsEnforcer', () => {
       .connect(wallet0)
       .deploy();
 
-    districtApproveERC20PermitEnforcer = await districtApproveERC20PermitEnforcerFactory
-      .connect(wallet0)
-      .deploy();
-
     CONTRACT_INFO = {
       chainId: verifyingContract.deployTransaction.chainId,
       verifyingContract: verifyingContract.address,
@@ -130,7 +121,8 @@ describe('DistrictERC20SubscriptionsEnforcer', () => {
     };
     delegatableUtils = generateUtil(CONTRACT_INFO);
   });
-  it('should SUCCEED to approveSubscription', async () => {
+
+  it('should SUCCEED to approveSubscriptiopn', async () => {
     expect(await erc20PermitToken.allowance(wallet0.address, verifyingContract.address)).to.equal(
       0,
     );
@@ -144,27 +136,14 @@ describe('DistrictERC20SubscriptionsEnforcer', () => {
       deadline,
     );
 
-    const _approveDelegation = generateDelegation(
-      CONTRACT_NAME,
-      verifyingContract,
-      pk0,
-      wallet1.address,
-      [
-        {
-          enforcer: districtApproveERC20PermitEnforcer.address,
-          terms: '0x',
-        },
-      ],
-    );
-
-    const APPROVE_INVOCATION_MESSAGE = {
+    const INVOCATION_MESSAGE = {
       replayProtection: {
         nonce: '0x01',
         queue: '0x00',
       },
       batch: [
         {
-          authority: [_approveDelegation],
+          authority: [],
           transaction: {
             to: verifyingContract.address,
             gasLimit: '210000000000000000',
@@ -183,12 +162,12 @@ describe('DistrictERC20SubscriptionsEnforcer', () => {
       ],
     };
 
-    const approveInvocation = delegatableUtils.signInvocation(APPROVE_INVOCATION_MESSAGE, pk1);
+    const invocation = delegatableUtils.signInvocation(INVOCATION_MESSAGE, pk1);
 
-    let approveTx = await verifyingContract.invoke([
+    let tx = await verifyingContract.invoke([
       {
-        signature: approveInvocation.signature,
-        invocations: approveInvocation.invocations,
+        signature: invocation.signature,
+        invocations: invocation.invocations,
       },
     ]);
     expect(await erc20PermitToken.allowance(wallet0.address, verifyingContract.address)).to.equal(
@@ -210,27 +189,24 @@ describe('DistrictERC20SubscriptionsEnforcer', () => {
       deadline,
     );
 
-    const _approveDelegation = generateDelegation(
-      CONTRACT_NAME,
-      verifyingContract,
-      pk0,
-      wallet1.address,
-      [
-        {
-          enforcer: districtApproveERC20PermitEnforcer.address,
-          terms: '0x',
-        },
-      ],
-    );
+    let salt = '01';
+    let inputTerms = verifyingContract.address + salt;
 
-    const APPROVE_INVOCATION_MESSAGE = {
+    const _delegation = generateDelegation(CONTRACT_NAME, verifyingContract, pk0, wallet1.address, [
+      {
+        enforcer: districtERC20SubscriptionsEnforcer.address,
+        terms: inputTerms,
+      },
+    ]);
+
+    const INVOCATION_MESSAGE = {
       replayProtection: {
         nonce: '0x01',
         queue: '0x00',
       },
       batch: [
         {
-          authority: [_approveDelegation],
+          authority: [],
           transaction: {
             to: verifyingContract.address,
             gasLimit: '210000000000000000',
@@ -246,26 +222,6 @@ describe('DistrictERC20SubscriptionsEnforcer', () => {
             ).data,
           },
         },
-      ],
-    };
-
-    const approveInvocation = delegatableUtils.signInvocation(APPROVE_INVOCATION_MESSAGE, pk1);
-
-    let salt = '01';
-    let inputTerms = verifyingContract.address + salt;
-    const _delegation = generateDelegation(CONTRACT_NAME, verifyingContract, pk0, wallet1.address, [
-      {
-        enforcer: districtERC20SubscriptionsEnforcer.address,
-        terms: inputTerms,
-      },
-    ]);
-
-    const INVOCATION_MESSAGE = {
-      replayProtection: {
-        nonce: '0x02',
-        queue: '0x00',
-      },
-      batch: [
         {
           authority: [_delegation],
           transaction: {
@@ -280,10 +236,6 @@ describe('DistrictERC20SubscriptionsEnforcer', () => {
     const invocation = delegatableUtils.signInvocation(INVOCATION_MESSAGE, pk1);
 
     let tx = await verifyingContract.invoke([
-      {
-        signature: approveInvocation.signature,
-        invocations: approveInvocation.invocations,
-      },
       {
         signature: invocation.signature,
         invocations: invocation.invocations,
@@ -306,27 +258,24 @@ describe('DistrictERC20SubscriptionsEnforcer', () => {
       deadline,
     );
 
-    const _approveDelegation = generateDelegation(
-      CONTRACT_NAME,
-      verifyingContract,
-      pk0,
-      wallet1.address,
-      [
-        {
-          enforcer: districtApproveERC20PermitEnforcer.address,
-          terms: '0x',
-        },
-      ],
-    );
+    let salt = '01';
+    let inputTerms = verifyingContract.address + salt;
 
-    const APPROVE_INVOCATION_MESSAGE = {
+    const _delegation = generateDelegation(CONTRACT_NAME, verifyingContract, pk0, wallet1.address, [
+      {
+        enforcer: districtERC20SubscriptionsEnforcer.address,
+        terms: inputTerms,
+      },
+    ]);
+
+    const INVOCATION_MESSAGE = {
       replayProtection: {
         nonce: '0x01',
         queue: '0x00',
       },
       batch: [
         {
-          authority: [_approveDelegation],
+          authority: [],
           transaction: {
             to: verifyingContract.address,
             gasLimit: '210000000000000000',
@@ -342,26 +291,14 @@ describe('DistrictERC20SubscriptionsEnforcer', () => {
             ).data,
           },
         },
-      ],
-    };
-
-    const approveInvocation = delegatableUtils.signInvocation(APPROVE_INVOCATION_MESSAGE, pk1);
-
-    let salt = '01';
-    let inputTerms = verifyingContract.address + salt;
-    const _delegation = generateDelegation(CONTRACT_NAME, verifyingContract, pk0, wallet1.address, [
-      {
-        enforcer: districtERC20SubscriptionsEnforcer.address,
-        terms: inputTerms,
-      },
-    ]);
-
-    const INVOCATION_MESSAGE = {
-      replayProtection: {
-        nonce: '0x02',
-        queue: '0x00',
-      },
-      batch: [
+        {
+          authority: [_delegation],
+          transaction: {
+            to: verifyingContract.address,
+            gasLimit: '210000000000000000',
+            data: (await verifyingContract.populateTransaction.paySubscription()).data,
+          },
+        },
         {
           authority: [_delegation],
           transaction: {
@@ -375,43 +312,11 @@ describe('DistrictERC20SubscriptionsEnforcer', () => {
 
     const invocation = delegatableUtils.signInvocation(INVOCATION_MESSAGE, pk1);
 
-    let tx = await verifyingContract.invoke([
-      {
-        signature: approveInvocation.signature,
-        invocations: approveInvocation.invocations,
-      },
-      {
-        signature: invocation.signature,
-        invocations: invocation.invocations,
-      },
-    ]);
-    await tx.wait();
-    expect(await erc20PermitToken.balanceOf(verifyingContract.address)).to.equal(1);
-
-    const INVOCATION_MESSAGE_1 = {
-      replayProtection: {
-        nonce: '0x03',
-        queue: '0x00',
-      },
-      batch: [
-        {
-          authority: [_delegation],
-          transaction: {
-            to: verifyingContract.address,
-            gasLimit: '210000000000000000',
-            data: (await verifyingContract.populateTransaction.paySubscription()).data,
-          },
-        },
-      ],
-    };
-
-    const invocation1 = delegatableUtils.signInvocation(INVOCATION_MESSAGE_1, pk1);
-
     await expect(
       verifyingContract.invoke([
         {
-          signature: invocation1.signature,
-          invocations: invocation1.invocations,
+          signature: invocation.signature,
+          invocations: invocation.invocations,
         },
       ]),
     ).to.be.revertedWith('DistrictERC20SubscriptionsEnforcer:invalid-subscritpion-time');
@@ -431,27 +336,24 @@ describe('DistrictERC20SubscriptionsEnforcer', () => {
       deadline,
     );
 
-    const _approveDelegation = generateDelegation(
-      CONTRACT_NAME,
-      verifyingContract,
-      pk0,
-      wallet1.address,
-      [
-        {
-          enforcer: districtApproveERC20PermitEnforcer.address,
-          terms: '0x',
-        },
-      ],
-    );
+    let salt = '01';
+    let inputTerms = verifyingContract.address + salt;
 
-    const APPROVE_INVOCATION_MESSAGE = {
+    const _delegation = generateDelegation(CONTRACT_NAME, verifyingContract, pk0, wallet1.address, [
+      {
+        enforcer: districtERC20SubscriptionsEnforcer.address,
+        terms: inputTerms,
+      },
+    ]);
+
+    const INVOCATION_MESSAGE = {
       replayProtection: {
         nonce: '0x01',
         queue: '0x00',
       },
       batch: [
         {
-          authority: [_approveDelegation],
+          authority: [],
           transaction: {
             to: verifyingContract.address,
             gasLimit: '210000000000000000',
@@ -467,26 +369,6 @@ describe('DistrictERC20SubscriptionsEnforcer', () => {
             ).data,
           },
         },
-      ],
-    };
-
-    const approveInvocation = delegatableUtils.signInvocation(APPROVE_INVOCATION_MESSAGE, pk1);
-
-    let salt = '01';
-    let inputTerms = verifyingContract.address + salt;
-    const _delegation = generateDelegation(CONTRACT_NAME, verifyingContract, pk0, wallet1.address, [
-      {
-        enforcer: districtERC20SubscriptionsEnforcer.address,
-        terms: inputTerms,
-      },
-    ]);
-
-    const INVOCATION_MESSAGE = {
-      replayProtection: {
-        nonce: '0x02',
-        queue: '0x00',
-      },
-      batch: [
         {
           authority: [_delegation],
           transaction: {
@@ -513,10 +395,6 @@ describe('DistrictERC20SubscriptionsEnforcer', () => {
 
     await expect(
       verifyingContract.invoke([
-        {
-          signature: approveInvocation.signature,
-          invocations: approveInvocation.invocations,
-        },
         {
           signature: invocation.signature,
           invocations: invocation.invocations,
@@ -539,27 +417,24 @@ describe('DistrictERC20SubscriptionsEnforcer', () => {
       deadline,
     );
 
-    const _approveDelegation = generateDelegation(
-      CONTRACT_NAME,
-      verifyingContract,
-      pk0,
-      wallet1.address,
-      [
-        {
-          enforcer: districtApproveERC20PermitEnforcer.address,
-          terms: '0x',
-        },
-      ],
-    );
+    let salt = '01';
+    let inputTerms = verifyingContract.address + salt;
 
-    const APPROVE_INVOCATION_MESSAGE = {
+    const _delegation = generateDelegation(CONTRACT_NAME, verifyingContract, pk0, wallet1.address, [
+      {
+        enforcer: districtERC20SubscriptionsEnforcer.address,
+        terms: inputTerms,
+      },
+    ]);
+
+    const INVOCATION_MESSAGE = {
       replayProtection: {
         nonce: '0x01',
         queue: '0x00',
       },
       batch: [
         {
-          authority: [_approveDelegation],
+          authority: [],
           transaction: {
             to: verifyingContract.address,
             gasLimit: '210000000000000000',
@@ -575,26 +450,6 @@ describe('DistrictERC20SubscriptionsEnforcer', () => {
             ).data,
           },
         },
-      ],
-    };
-
-    const approveInvocation = delegatableUtils.signInvocation(APPROVE_INVOCATION_MESSAGE, pk1);
-
-    let salt = '01';
-    let inputTerms = verifyingContract.address + salt;
-    const _delegation = generateDelegation(CONTRACT_NAME, verifyingContract, pk0, wallet1.address, [
-      {
-        enforcer: districtERC20SubscriptionsEnforcer.address,
-        terms: inputTerms,
-      },
-    ]);
-
-    const INVOCATION_MESSAGE = {
-      replayProtection: {
-        nonce: '0x02',
-        queue: '0x00',
-      },
-      batch: [
         {
           authority: [_delegation],
           transaction: {
@@ -619,9 +474,19 @@ describe('DistrictERC20SubscriptionsEnforcer', () => {
       .connect(wallet0)
       .cancelSubscription(_delegation, domainHash);
 
-    /////
+    await expect(
+      verifyingContract.invoke([
+        {
+          signature: invocation.signature,
+          invocations: invocation.invocations,
+        },
+      ]),
+    ).to.be.revertedWith('DistrictERC20SubscriptionsEnforcer:canceled-subscription');
+
+    ////
     salt = '02';
     inputTerms = verifyingContract.address + salt;
+
     const _delegation1 = generateDelegation(
       CONTRACT_NAME,
       verifyingContract,
@@ -637,10 +502,27 @@ describe('DistrictERC20SubscriptionsEnforcer', () => {
 
     const INVOCATION_MESSAGE_1 = {
       replayProtection: {
-        nonce: '0x02',
+        nonce: '0x01',
         queue: '0x00',
       },
       batch: [
+        {
+          authority: [],
+          transaction: {
+            to: verifyingContract.address,
+            gasLimit: '210000000000000000',
+            data: (
+              await verifyingContract.populateTransaction.approveSubscription(
+                wallet0.address,
+                totalSubscriptionAmount,
+                deadline,
+                v,
+                r,
+                s,
+              )
+            ).data,
+          },
+        },
         {
           authority: [_delegation1],
           transaction: {
@@ -654,17 +536,12 @@ describe('DistrictERC20SubscriptionsEnforcer', () => {
 
     const invocation1 = delegatableUtils.signInvocation(INVOCATION_MESSAGE_1, pk1);
 
-    await verifyingContract.invoke([
-      {
-        signature: approveInvocation.signature,
-        invocations: approveInvocation.invocations,
-      },
+    let tx = await verifyingContract.invoke([
       {
         signature: invocation1.signature,
         invocations: invocation1.invocations,
       },
     ]);
-
     expect(await erc20PermitToken.balanceOf(verifyingContract.address)).to.equal(1);
   });
 });
