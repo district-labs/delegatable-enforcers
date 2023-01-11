@@ -26,7 +26,12 @@ export default async function deploy(hardhat: HardhatRuntimeEnvironment) {
   await deploy("VerifyingContractERC20PermitSubscriptions", {
     contract: "VerifyingContractERC20PermitSubscriptions",
     from: deployer,
-    args: ["DistrictLabs", token.address, utils.parseEther("10")],
+    args: [
+      "VerifyingContractERC20PermitSubscriptions",
+      token.address,
+      utils.parseEther("1"),
+      86400,
+    ],
     skipIfAlreadyDeployed: false,
     log: true,
   });

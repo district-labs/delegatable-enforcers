@@ -2,7 +2,7 @@ lockfileVersion: 5.4
 
 specifiers:
   '@chainlink/contracts': ^0.5.1
-  '@delegatable/delegatable-sol': 0.0.0-beta.0
+  '@delegatable/delegatable-sol': 0.0.0-beta.2
   '@district-labs/uniswap-oracle': ^1.0.2
   '@ethersproject/abi': 5.6.1
   '@ethersproject/providers': ^5.7.2
@@ -51,7 +51,7 @@ specifiers:
 
 dependencies:
   '@chainlink/contracts': 0.5.1_ethers@5.7.2
-  '@delegatable/delegatable-sol': 0.0.0-beta.0
+  '@delegatable/delegatable-sol': 0.0.0-beta.2
   '@district-labs/uniswap-oracle': 1.0.2
   '@ethersproject/providers': 5.7.2
   '@foundry-rs/hardhat': 0.1.8_iux7e45ocp56uyzodnbddonz7i
@@ -141,8 +141,8 @@ packages:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
 
-  /@delegatable/delegatable-sol/0.0.0-beta.0:
-    resolution: {integrity: sha512-7x1CAySMgPHpQkqCuYbUhOFr7Q9S4KlZsGYs57N7aPD+Ft27aPD8ynb5mXdhmNLrIF0rLcObU/4B+p92y6r8aw==}
+  /@delegatable/delegatable-sol/0.0.0-beta.2:
+    resolution: {integrity: sha512-qkUE6yy6t8aajXlnUUpNFA3moPQ0MlCgv5SzF/Fbb0G3Bpeg0+xKuvLm95t0bipYRzZIhzVHASzUbwTewmV8zA==}
     dependencies:
       '@openzeppelin/contracts': 4.8.0
     dev: false

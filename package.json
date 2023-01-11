@@ -79,7 +79,7 @@
   ],
   "dependencies": {
     "@chainlink/contracts": "^0.5.1",
-    "@delegatable/delegatable-sol": "0.0.0-beta.0",
+    "@delegatable/delegatable-sol": "0.0.0-beta.2",
     "@district-labs/uniswap-oracle": "^1.0.2",
     "@ethersproject/providers": "^5.7.2",
     "@foundry-rs/hardhat": "^0.1.6",
