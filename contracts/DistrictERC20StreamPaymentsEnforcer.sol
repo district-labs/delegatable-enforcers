@@ -16,8 +16,8 @@ contract DistrictERC20StreamPaymentsEnforcer is
   mapping(bytes32 => bool) public isCanceled;
   mapping(bytes32 => uint256) public latestTimestamp;
   mapping(bytes32 => uint256) public endTimestamp;
-  mapping(bytes32 => uint256) public amountRemaining;//
-  mapping(bytes32 => uint256) public unclaimedAmounts;//
+  mapping(bytes32 => uint256) public amountRemaining; //
+  mapping(bytes32 => uint256) public unclaimedAmounts; //
 
   function enforceCaveat(
     bytes calldata terms,
@@ -29,30 +29,30 @@ contract DistrictERC20StreamPaymentsEnforcer is
       "DistrictERC20StreamPaymentsEnforcer:canceled-subscription"
     );
     bytes4 targetSig = bytes4(transaction.data[0:4]);
-    bytes4 _allowedSig = 0x6c323c5c;
+    bytes4 _allowedSig = 0x9293e590;
     require(targetSig == _allowedSig, "DistrictERC20StreamPaymentsEnforcer:invalid-method");
     // decode delegator terms
     uint256 _streamEndTimestamp = endTimestamp[delegationHash];
     if (_streamEndTimestamp == 0) {
-        // stream just started, set the variables
-        uint256 _startStreamTimestamp = BytesLib.toUint256(terms, 0);
-        uint256 _endStreamTimestamp = BytesLib.toUint256(terms, 32);
-        uint256 _startAmount = BytesLib.toUint256(terms, 64);
-        latestTimestamp[delegationHash] = _startStreamTimestamp;
-        endTimestamp[delegationHash] = _endStreamTimestamp;
-        amountRemaining[delegationHash] = _startAmount;
+      // stream just started, set the variables
+      uint256 _startStreamTimestamp = BytesLib.toUint256(terms, 0);
+      uint256 _endStreamTimestamp = BytesLib.toUint256(terms, 32);
+      uint256 _startAmount = BytesLib.toUint256(terms, 64);
+      latestTimestamp[delegationHash] = _startStreamTimestamp;
+      endTimestamp[delegationHash] = _endStreamTimestamp;
+      amountRemaining[delegationHash] = _startAmount;
     }
 
     uint256 _latestWithdrawal = latestTimestamp[delegationHash];
     uint256 _timeRemaining = _streamEndTimestamp - _latestWithdrawal;
-    require(_timeRemaining > 0, "stream-ended");// redundant, should auto-revert if negative
-    uint256 _currentTimestamp = block.timestamp;    
+    require(_timeRemaining > 0, "stream-ended"); // redundant, should auto-revert if negative
+    uint256 _currentTimestamp = block.timestamp;
     require(_currentTimestamp > _latestWithdrawal, "stream-early");
     uint256 _timeElapsed = _currentTimestamp - _latestWithdrawal;
     if (_timeElapsed > _timeRemaining) {
-        _timeElapsed = _timeRemaining;
+      _timeElapsed = _timeRemaining;
     }
-    uint256 _unclaimedAmount = amountRemaining[delegationHash] * _timeRemaining / _timeElapsed;
+    uint256 _unclaimedAmount = (amountRemaining[delegationHash] * _timeRemaining) / _timeElapsed;
     // update mappings
     unclaimedAmounts[delegationHash] = _unclaimedAmount;
     amountRemaining[delegationHash] -= _unclaimedAmount;
@@ -60,7 +60,7 @@ contract DistrictERC20StreamPaymentsEnforcer is
     return true;
   }
 
-  function getUnclaimedAmount(bytes32 delegationHash) public returns(uint256) {
+  function getUnclaimedAmount(bytes32 delegationHash) public returns (uint256) {
     return unclaimedAmounts[delegationHash];
   }
 
