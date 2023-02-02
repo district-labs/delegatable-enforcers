@@ -4,6 +4,7 @@ pragma solidity 0.8.15;
 import { BytesLib } from "@delegatable/delegatable-sol/contracts/libraries/BytesLib.sol";
 import { CaveatEnforcer, Transaction } from "@delegatable/delegatable-sol/contracts/CaveatEnforcer.sol";
 import "@delegatable/delegatable-sol/contracts/Delegatable.sol";
+import "hardhat/console.sol";
 
 contract DistrictERC20StreamPaymentsEnforcer is
   CaveatEnforcer,
@@ -16,16 +17,39 @@ contract DistrictERC20StreamPaymentsEnforcer is
     Transaction calldata transaction,
     bytes32 delegationHash
   ) public override returns (bool) {
-    require(
-      !isCanceled[delegationHash],
-      "DistrictERC20StreamPaymentsEnforcer:canceled-subscription"
-    );
-    bytes4 targetSig = bytes4(transaction.data[0:4]);
-    bytes4 _allowedSig = 0xdc7945e0;
-    require(targetSig == _allowedSig, "DistrictERC20StreamPaymentsEnforcer:invalid-method");
-    // gk add correct recipient check here 
-    return true;
 
+    // check if canceled
+    require(!isCanceled[delegationHash], "enforcer:canceled-subscription");
+
+    // check if correct function call
+    bytes4 targetSig = bytes4(transaction.data[0:4]);
+    bytes4 _allowedSig = 0xcf5f8da0;
+    require(targetSig == _allowedSig, "enforcer:invalid-method");
+
+    // check recipient
+    address txRecipient = BytesLib.toAddress(transaction.data, 16); 
+    address recipient = BytesLib.toAddress(terms, 0);
+    require(txRecipient == recipient, "enforcer:invalid-recipient");
+
+    // check token
+    address txToken = BytesLib.toAddress(transaction.data, 48);
+    address token = BytesLib.toAddress(terms, 20);
+    require(txToken == token, "enforcer:invalid-token");
+
+    // check startStreamTime
+    uint64 txStartStreamTimestamp = BytesLib.toUint64(transaction.data, 92);
+    uint64 startStreamTimestamp = BytesLib.toUint64(terms, 40);
+    require(txStartStreamTimestamp == startStreamTimestamp, "enforcer:invalid-startTime");
+
+    // check endStreamTime
+    uint64 endStreamTimestamp = BytesLib.toUint64(terms, 48);
+    uint64 txEndStreamTimestamp = BytesLib.toUint64(transaction.data, 124);
+    require(endStreamTimestamp == txEndStreamTimestamp, "enforcer:invalid-end");
+
+    // check amount
+    // uint256 txAmount = BytesLib.toUint256(transaction.data, 132);
+    // uint256 amount = BytesLib.toUint256(terms, 132);
+    return true;
   }
 
   function cancelSubscription(SignedDelegation calldata signedDelegation, bytes32 domainHash)
