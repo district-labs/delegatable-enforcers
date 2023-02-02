@@ -69,13 +69,18 @@ describe('DistrictERC20StreamPaymentsEnforcer', () => {
   });
 
   it('should SUCCEED to INVOKE streamToDate', async () => {
-    let amount = 5;
+    let amount = 100;
     expect(await erc20Token.allowance(wallet0.address, verifyingContract.address)).to.equal(0);
     let tx = await erc20Token.connect(wallet0).approve(verifyingContract.address, amount);
     expect(await erc20Token.allowance(wallet0.address, verifyingContract.address)).to.equal(amount);
 
-    let inputTerms = '0x00'; //should add recipient here
-
+    let recipient = wallet1.address;
+    let token = erc20Token.address.substring(2, 42);
+    let startStreamTimestamp1 = '0000000000000005';
+    let endStreamTimestamp = '0000000000000009';
+    let amountApproved = '0000000000000000000000000000000000000000000000000000000000000064';
+    let inputTerms =
+      recipient + token + startStreamTimestamp1 + endStreamTimestamp + amountApproved; //should add recipient here
     const _delegation = generateDelegation(CONTRACT_NAME, verifyingContract, pk0, wallet1.address, [
       {
         enforcer: districtERC20StreamPaymentsEnforcer.address,
@@ -100,8 +105,8 @@ describe('DistrictERC20StreamPaymentsEnforcer', () => {
               await verifyingContract.populateTransaction.streamToDate(
                 wallet1.address,
                 erc20Token.address,
-                0, // startStreamTimestamp
-                5, // endStreamTimestamp
+                5, // startStreamTimestamp
+                9, // endStreamTimestamp
                 amount,
                 delegationHash,
               )
@@ -110,6 +115,7 @@ describe('DistrictERC20StreamPaymentsEnforcer', () => {
         },
       ],
     };
+    INVOCATION_MESSAGE.batch[0].transaction.data;
 
     const invocation = delegatableUtils.signInvocation(INVOCATION_MESSAGE, pk1);
 
@@ -119,7 +125,6 @@ describe('DistrictERC20StreamPaymentsEnforcer', () => {
         invocations: invocation.invocations,
       },
     ]);
-    console.log(`${await erc20Token.balanceOf(wallet1.address)}`);
-    // expect(await erc20Token.balanceOf(wallet1.address)).to.be.greaterThan(0);
+    expect(await erc20Token.balanceOf(wallet1.address)).to.be.eq(amount);
   });
 });
