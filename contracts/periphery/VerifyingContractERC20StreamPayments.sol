@@ -5,8 +5,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@delegatable/delegatable-sol/contracts/Delegatable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-import "hardhat/console.sol";
-
 contract VerifyingContractERC20StreamPayments is Delegatable, Ownable {
   mapping(bytes32 => uint256) public latestTimestamp;
   mapping(bytes32 => uint256) public endTimestamp;
@@ -17,12 +15,12 @@ contract VerifyingContractERC20StreamPayments is Delegatable, Ownable {
   function streamToDate(
     address recipient,
     address token,
-    uint256 startStreamTimestamp,
-    uint256 endStreamTimestamp,
+    uint64 startStreamTimestamp,
+    uint64 endStreamTimestamp,
     uint256 amount,
     bytes32 delegationHash
   ) external {
-    require(msg.sender == address(this), "VerifyingContract:invalid-sender");
+    require(msg.sender == address(this), "verifier:invalid-sender");
     uint256 _streamEndTimestamp = endTimestamp[delegationHash];
     if (_streamEndTimestamp == 0) {
       // stream just started, set the variables
@@ -32,16 +30,16 @@ contract VerifyingContractERC20StreamPayments is Delegatable, Ownable {
       _streamEndTimestamp = endTimestamp[delegationHash];
     }
     // find unclaimed amount
-    uint256 _latestWithdrawal = latestTimestamp[delegationHash];
-    uint256 _timeRemaining = _streamEndTimestamp - _latestWithdrawal;
-    require(_timeRemaining > 0, "stream-ended"); // redundant, should auto-revert if negative
+    uint256 _latestWithdrawal = latestTimestamp[delegationHash]; //start time
+    uint256 _timeRemaining = _streamEndTimestamp - _latestWithdrawal; //duration
+    require(_timeRemaining > 0, "verifier:stream-ended"); // redundant, should auto-revert if negative
     uint256 _currentTimestamp = block.timestamp;
-    require(_currentTimestamp > _latestWithdrawal, "stream-early");
+    require(_currentTimestamp > _latestWithdrawal, "verifier:stream-early");
     uint256 _timeElapsed = _currentTimestamp - _latestWithdrawal;
     if (_timeElapsed > _timeRemaining) {
       _timeElapsed = _timeRemaining;
     }
-    uint256 _unclaimedAmount = (amountRemaining[delegationHash] * _timeRemaining) / _timeElapsed;
+    uint256 _unclaimedAmount = (amountRemaining[delegationHash] * _timeElapsed) / _timeRemaining;
     // update mappings
     amountRemaining[delegationHash] -= _unclaimedAmount;
     latestTimestamp[delegationHash] = _currentTimestamp;
