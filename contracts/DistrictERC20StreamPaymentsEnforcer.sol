@@ -17,7 +17,6 @@ contract DistrictERC20StreamPaymentsEnforcer is
     Transaction calldata transaction,
     bytes32 delegationHash
   ) public override returns (bool) {
-
     // check if canceled
     require(!isCanceled[delegationHash], "enforcer:canceled-subscription");
 
@@ -27,7 +26,7 @@ contract DistrictERC20StreamPaymentsEnforcer is
     require(targetSig == _allowedSig, "enforcer:invalid-method");
 
     // check recipient
-    address txRecipient = BytesLib.toAddress(transaction.data, 16); 
+    address txRecipient = BytesLib.toAddress(transaction.data, 16);
     address recipient = BytesLib.toAddress(terms, 0);
     require(txRecipient == recipient, "enforcer:invalid-recipient");
 
@@ -47,8 +46,8 @@ contract DistrictERC20StreamPaymentsEnforcer is
     require(endStreamTimestamp == txEndStreamTimestamp, "enforcer:invalid-end");
 
     // check amount
-    // uint256 txAmount = BytesLib.toUint256(transaction.data, 132);
-    // uint256 amount = BytesLib.toUint256(terms, 132);
+    uint256 txAmount = BytesLib.toUint256(transaction.data, 132);
+    // uint256 amount = BytesLib.toUint256(terms, 56);
     return true;
   }
 
