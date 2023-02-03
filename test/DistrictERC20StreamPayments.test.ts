@@ -53,7 +53,7 @@ describe('DistrictERC20StreamPaymentsEnforcer', () => {
     erc20Token = await erc20TokenFactory.connect(wallet0).deploy();
     await erc20Token.deployed();
 
-    verifyingContract = await verifyingContractFactory.connect(wallet0).deploy(CONTRACT_NAME);
+    verifyingContract = await verifyingContractFactory.connect(wallet0).deploy(CONTRACT_NAME, 1);
     await verifyingContract.deployed();
 
     districtERC20StreamPaymentsEnforcer = await districtERC20StreamPaymentsEnforcerFactory
@@ -70,6 +70,7 @@ describe('DistrictERC20StreamPaymentsEnforcer', () => {
 
   it('should SUCCEED to INVOKE streamToDate', async () => {
     let amount = 100;
+    let tokensRequested = 1;
     expect(await erc20Token.allowance(wallet0.address, verifyingContract.address)).to.equal(0);
     let tx = await erc20Token.connect(wallet0).approve(verifyingContract.address, amount);
     expect(await erc20Token.allowance(wallet0.address, verifyingContract.address)).to.equal(amount);
@@ -78,9 +79,16 @@ describe('DistrictERC20StreamPaymentsEnforcer', () => {
     let token = erc20Token.address.substring(2, 42);
     let startStreamTimestamp1 = '0000000000000005';
     let endStreamTimestamp = '0000000000000009';
-    let amountApproved = '0000000000000000000000000000000000000000000000000000000000000064';
+    let originalAmount = '0000000000000000000000000000000000000000000000000000000000000064';
+    let verifierAddress = verifyingContract.address.substring(2, 42);
     let inputTerms =
-      recipient + token + startStreamTimestamp1 + endStreamTimestamp + amountApproved; //should add recipient here
+      recipient +
+      token +
+      startStreamTimestamp1 +
+      endStreamTimestamp +
+      originalAmount +
+      verifierAddress; //should add recipient here
+
     const _delegation = generateDelegation(CONTRACT_NAME, verifyingContract, pk0, wallet1.address, [
       {
         enforcer: districtERC20StreamPaymentsEnforcer.address,
@@ -108,14 +116,14 @@ describe('DistrictERC20StreamPaymentsEnforcer', () => {
                 5, // startStreamTimestamp
                 9, // endStreamTimestamp
                 amount,
-                delegationHash,
+                verifyingContract.address,
+                tokensRequested,
               )
             ).data,
           },
         },
       ],
     };
-    INVOCATION_MESSAGE.batch[0].transaction.data;
 
     const invocation = delegatableUtils.signInvocation(INVOCATION_MESSAGE, pk1);
 
@@ -125,6 +133,6 @@ describe('DistrictERC20StreamPaymentsEnforcer', () => {
         invocations: invocation.invocations,
       },
     ]);
-    expect(await erc20Token.balanceOf(wallet1.address)).to.be.eq(amount);
+    expect(await erc20Token.balanceOf(wallet1.address)).to.be.eq(tokensRequested);
   });
 });
