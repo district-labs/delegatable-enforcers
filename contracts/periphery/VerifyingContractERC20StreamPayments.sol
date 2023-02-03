@@ -6,11 +6,15 @@ import "@delegatable/delegatable-sol/contracts/Delegatable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract VerifyingContractERC20StreamPayments is Delegatable, Ownable {
-  mapping(bytes32 => uint256) public latestTimestamp;
-  mapping(bytes32 => uint256) public endTimestamp;
-  mapping(bytes32 => uint256) public amountRemaining; //
+  uint256 public immutable tokensPerSecond;
 
-  constructor(string memory name) Delegatable(name, "1") {}
+  constructor(string memory name, uint256 _tokensPerSecond) Delegatable(name, "1") {
+    tokensPerSecond = _tokensPerSecond;
+  }
+
+  function getTokensPerSecond() external returns (uint256) {
+    return tokensPerSecond;
+  }
 
   function streamToDate(
     address recipient,
@@ -18,33 +22,11 @@ contract VerifyingContractERC20StreamPayments is Delegatable, Ownable {
     uint64 startStreamTimestamp,
     uint64 endStreamTimestamp,
     uint256 amount,
-    bytes32 delegationHash
+    address verifier,
+    uint256 tokensRequested
   ) external {
     require(msg.sender == address(this), "verifier:invalid-sender");
-    uint256 _streamEndTimestamp = endTimestamp[delegationHash];
-    if (_streamEndTimestamp == 0) {
-      // stream just started, set the variables
-      latestTimestamp[delegationHash] = startStreamTimestamp;
-      endTimestamp[delegationHash] = endStreamTimestamp;
-      amountRemaining[delegationHash] = amount;
-      _streamEndTimestamp = endTimestamp[delegationHash];
-    }
-    // find unclaimed amount
-    uint256 _latestWithdrawal = latestTimestamp[delegationHash]; //start time
-    uint256 _timeRemaining = _streamEndTimestamp - _latestWithdrawal; //duration
-    require(_timeRemaining > 0, "verifier:stream-ended"); // redundant, should auto-revert if negative
-    uint256 _currentTimestamp = block.timestamp;
-    require(_currentTimestamp > _latestWithdrawal, "verifier:stream-early");
-    uint256 _timeElapsed = _currentTimestamp - _latestWithdrawal;
-    if (_timeElapsed > _timeRemaining) {
-      _timeElapsed = _timeRemaining;
-    }
-    uint256 _unclaimedAmount = (amountRemaining[delegationHash] * _timeElapsed) / _timeRemaining;
-    // update mappings
-    amountRemaining[delegationHash] -= _unclaimedAmount;
-    latestTimestamp[delegationHash] = _currentTimestamp;
-    // transfer tokens
-    IERC20(token).transferFrom(_msgSender(), recipient, _unclaimedAmount);
+    IERC20(token).transferFrom(_msgSender(), recipient, tokensRequested);
   }
 
   function _msgSender() internal view override(DelegatableCore, Context) returns (address sender) {
