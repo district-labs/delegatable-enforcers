@@ -7,24 +7,26 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract VerifyingContractERC20StreamPayments is Delegatable, Ownable {
   uint256 public immutable tokensPerSecond;
+  address public immutable token;
 
-  constructor(string memory name, uint256 _tokensPerSecond) Delegatable(name, "1") {
+  constructor(
+    string memory name,
+    uint256 _tokensPerSecond,
+    address _token
+  ) Delegatable(name, "1") {
     tokensPerSecond = _tokensPerSecond;
+    token = _token;
   }
 
   function getTokensPerSecond() external returns (uint256) {
     return tokensPerSecond;
   }
 
-  function streamToDate(
-    address recipient,
-    address token,
-    uint64 startStreamTimestamp,
-    uint64 endStreamTimestamp,
-    uint256 amount,
-    address verifier,
-    uint256 tokensRequested
-  ) external {
+  function getTokenAddress() external returns (address) {
+    return token;
+  }
+
+  function withdrawFromStream(address recipient, uint256 tokensRequested) external {
     require(msg.sender == address(this), "verifier:invalid-sender");
     IERC20(token).transferFrom(_msgSender(), recipient, tokensRequested);
   }
