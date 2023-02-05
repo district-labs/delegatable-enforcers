@@ -4,7 +4,6 @@ pragma solidity 0.8.15;
 import { BytesLib } from "@delegatable/delegatable-sol/contracts/libraries/BytesLib.sol";
 import { CaveatEnforcer, Transaction } from "@delegatable/delegatable-sol/contracts/CaveatEnforcer.sol";
 import "@delegatable/delegatable-sol/contracts/Delegatable.sol";
-import "hardhat/console.sol";
 
 interface IVerifier {
   function getTokensPerSecond() external returns (uint256);
@@ -22,47 +21,18 @@ contract DistrictERC20StreamPaymentsEnforcer is
     Transaction calldata transaction,
     bytes32 delegationHash
   ) public override returns (bool) {
-    // check if canceled
     require(!isCanceled[delegationHash], "enforcer:canceled-subscription");
-
-    // check if correct function call
-    require(bytes4(transaction.data[0:4]) == 0xd4d5c582, "enforcer:invalid-method");
-
-    // check recipient
+    require(bytes4(transaction.data[0:4]) == 0x4fd30ba3, "enforcer:invalid-method");
     require(
       BytesLib.toAddress(transaction.data, 16) == BytesLib.toAddress(terms, 0),
       "enforcer:invalid-recipient"
     );
 
-    // check token
-    require(
-      BytesLib.toAddress(transaction.data, 48) == BytesLib.toAddress(terms, 20),
-      "enforcer:invalid-token"
-    );
-
-    // check startStreamTime
-    uint64 startStreamTimestamp = BytesLib.toUint64(terms, 40);
-    require(
-      startStreamTimestamp == BytesLib.toUint64(transaction.data, 92),
-      "enforcer:invalid-startTime"
-    );
-
-    // check endStreamTime
-    uint64 endStreamTimestamp = BytesLib.toUint64(terms, 48);
-    require(endStreamTimestamp == BytesLib.toUint64(transaction.data, 124), "enforcer:invalid-end");
-
-    // check original amount
-    uint256 originalAmount = BytesLib.toUint256(terms, 56);
-    require(
-      BytesLib.toUint256(transaction.data, 132) == originalAmount,
-      "enforcer:invalid-original-amount"
-    );
-
-    // // check verifier
-    address verifier = BytesLib.toAddress(terms, 88);
-    require(verifier == BytesLib.toAddress(transaction.data, 176), "enforcer:invalid-verifier");
-
     // ensure allowed withdrawal limits
+    uint64 startStreamTimestamp = BytesLib.toUint64(terms, 40);
+    uint64 endStreamTimestamp = BytesLib.toUint64(terms, 48);
+    uint256 originalAmount = BytesLib.toUint256(terms, 56);
+    address verifier = BytesLib.toAddress(terms, 20);
     uint256 tokensPerSecond = IVerifier(verifier).getTokensPerSecond();
     uint256 currentTimestamp = block.timestamp;
     uint256 elapsedTime = currentTimestamp - startStreamTimestamp;
@@ -71,12 +41,11 @@ contract DistrictERC20StreamPaymentsEnforcer is
       elapsedTime = streamTotalTime;
     }
     uint256 totalTokensStreamed = elapsedTime * tokensPerSecond;
-    uint256 tokensRequested = BytesLib.toUint256(transaction.data, 196);
+    uint256 tokensRequested = BytesLib.toUint256(transaction.data, 36);
     uint256 totalWithdrawal = totalWithdrawals[delegationHash];
     require(totalWithdrawal + tokensRequested <= totalTokensStreamed, "enforcer:large-withdrawal");
     require(totalTokensStreamed <= originalAmount, "enforcer:large-withdrawal-1");
     totalWithdrawals[delegationHash] += tokensRequested;
-
     return true;
   }
 
