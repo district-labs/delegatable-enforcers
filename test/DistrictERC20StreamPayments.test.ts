@@ -53,7 +53,10 @@ describe('DistrictERC20StreamPaymentsEnforcer', () => {
     erc20Token = await erc20TokenFactory.connect(wallet0).deploy();
     await erc20Token.deployed();
 
-    verifyingContract = await verifyingContractFactory.connect(wallet0).deploy(CONTRACT_NAME, 1);
+    let tokensPerSecond = 1;
+    verifyingContract = await verifyingContractFactory
+      .connect(wallet0)
+      .deploy(CONTRACT_NAME, tokensPerSecond, erc20Token.address);
     await verifyingContract.deployed();
 
     districtERC20StreamPaymentsEnforcer = await districtERC20StreamPaymentsEnforcerFactory
@@ -76,18 +79,13 @@ describe('DistrictERC20StreamPaymentsEnforcer', () => {
     expect(await erc20Token.allowance(wallet0.address, verifyingContract.address)).to.equal(amount);
 
     let recipient = wallet1.address;
-    let token = erc20Token.address.substring(2, 42);
+    let verifierAddress = verifyingContract.address.substring(2, 42);
     let startStreamTimestamp1 = '0000000000000005';
     let endStreamTimestamp = '0000000000000009';
     let originalAmount = '0000000000000000000000000000000000000000000000000000000000000064';
-    let verifierAddress = verifyingContract.address.substring(2, 42);
+
     let inputTerms =
-      recipient +
-      token +
-      startStreamTimestamp1 +
-      endStreamTimestamp +
-      originalAmount +
-      verifierAddress; //should add recipient here
+      recipient + verifierAddress + startStreamTimestamp1 + endStreamTimestamp + originalAmount;
 
     const _delegation = generateDelegation(CONTRACT_NAME, verifyingContract, pk0, wallet1.address, [
       {
@@ -110,13 +108,8 @@ describe('DistrictERC20StreamPaymentsEnforcer', () => {
             to: verifyingContract.address,
             gasLimit: '210000000000000000',
             data: (
-              await verifyingContract.populateTransaction.streamToDate(
+              await verifyingContract.populateTransaction.withdrawFromStream(
                 wallet1.address,
-                erc20Token.address,
-                5, // startStreamTimestamp
-                9, // endStreamTimestamp
-                amount,
-                verifyingContract.address,
                 tokensRequested,
               )
             ).data,
