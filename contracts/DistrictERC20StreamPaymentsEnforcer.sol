@@ -11,8 +11,9 @@ interface IVerifier {
 
 contract DistrictERC20StreamPaymentsEnforcer is
   CaveatEnforcer,
-  Delegatable("DistrictERC20PermitSubscriptionsEnforcer", "1")
+  Delegatable("DistrictERC20PermitStreamingPaymentsEnforcer", "1")
 {
+  using BytesLib for bytes;
   mapping(bytes32 => bool) public isCanceled;
   mapping(bytes32 => uint256) public totalWithdrawals;
 
@@ -23,28 +24,24 @@ contract DistrictERC20StreamPaymentsEnforcer is
   ) public override returns (bool) {
     require(!isCanceled[delegationHash], "enforcer:canceled-subscription");
     require(bytes4(transaction.data[0:4]) == 0x4fd30ba3, "enforcer:invalid-method");
-    require(
-      BytesLib.toAddress(transaction.data, 16) == BytesLib.toAddress(terms, 0),
-      "enforcer:invalid-recipient"
-    );
-
+    require(transaction.data.toAddress(16) == terms.toAddress(0), "enforcer:invalid-recipient");
     // ensure allowed withdrawal limits
-    uint64 startStreamTimestamp = BytesLib.toUint64(terms, 40);
-    uint64 endStreamTimestamp = BytesLib.toUint64(terms, 48);
-    uint256 originalAmount = BytesLib.toUint256(terms, 56);
-    address verifier = BytesLib.toAddress(terms, 20);
+    uint64 startStreamTimestamp = terms.toUint64(40);
+    uint64 endStreamTimestamp = terms.toUint64(48);
+    address verifier = terms.toAddress(20);
     uint256 tokensPerSecond = IVerifier(verifier).getTokensPerSecond();
     uint256 currentTimestamp = block.timestamp;
     uint256 elapsedTime = currentTimestamp - startStreamTimestamp;
     uint256 streamTotalTime = endStreamTimestamp - startStreamTimestamp;
+
     if (elapsedTime > streamTotalTime) {
       elapsedTime = streamTotalTime;
     }
     uint256 totalTokensStreamed = elapsedTime * tokensPerSecond;
-    uint256 tokensRequested = BytesLib.toUint256(transaction.data, 36);
+    uint256 tokensRequested = transaction.data.toUint256(36);
     uint256 totalWithdrawal = totalWithdrawals[delegationHash];
+
     require(totalWithdrawal + tokensRequested <= totalTokensStreamed, "enforcer:large-withdrawal");
-    require(totalTokensStreamed <= originalAmount, "enforcer:large-withdrawal-1");
     totalWithdrawals[delegationHash] += tokensRequested;
     return true;
   }
