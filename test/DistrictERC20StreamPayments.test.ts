@@ -71,7 +71,7 @@ describe('DistrictERC20StreamPaymentsEnforcer', () => {
     delegatableUtils = generateUtil(CONTRACT_INFO);
   });
 
-  it('should SUCCEED to INVOKE streamToDate', async () => {
+  it('should SUCCEED to INVOKE withdrawFromStream', async () => {
     let amount = 100;
     let tokensRequested = 1;
     expect(await erc20Token.allowance(wallet0.address, verifyingContract.address)).to.equal(0);
@@ -82,10 +82,9 @@ describe('DistrictERC20StreamPaymentsEnforcer', () => {
     let verifierAddress = verifyingContract.address.substring(2, 42);
     let startStreamTimestamp1 = '0000000000000005';
     let endStreamTimestamp = '0000000000000009';
-    let originalAmount = '0000000000000000000000000000000000000000000000000000000000000064';
 
     let inputTerms =
-      recipient + verifierAddress + startStreamTimestamp1 + endStreamTimestamp + originalAmount;
+      recipient + verifierAddress + startStreamTimestamp1 + endStreamTimestamp;
 
     const _delegation = generateDelegation(CONTRACT_NAME, verifyingContract, pk0, wallet1.address, [
       {
