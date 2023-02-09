@@ -127,6 +127,7 @@ describe('EnforcerFactory', () => {
     let deployTx = await enforcerFactory.connect(wallet0).deploySubscriptions(saltEnforcer);
     // pointer to enforcer
     let enforcer = new ethers.Contract(enforcerAddress, abi);
+    expect(enforcerAddress).to.eq(enforcer.address);
 
     // console.log(deployTx);
   });
