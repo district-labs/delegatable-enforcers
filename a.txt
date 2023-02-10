@@ -1,0 +1,21 @@
+enforcer terms; startTime, endTime, verifierAddress, 
+1. diff blockTime-startTime
+1.1 blocktime-startTime <= endTime-startTime
+    - if blockTime > endTime use ; endTime - startTime
+    - oterwise blockTime - startTime
+2. calc how many tokens they have been streamed
+    - enforcer reads from verifier tokensPerSecond
+3. tokensPerSecond * (1.1) = amountToWithdraw this time
+4. totalWithdrawalPrevious + amountToWithdraw <= totalAmount 
+
+verifier; - state var immutable tokensPerSecond
+
+ENFORCER:
+timeElapsed = currentTime - startTime;
+streamTotalTime = endTime - startTime; (fixed)
+totalTokensStreamed = timeElapsed*tokensPerSecond (get tokensPerSecond from verifier)
+tokensRequestedFromStream = tx.data
+tokensPreviouslyWithdrawn (storage - keep track)
+tokensPreviouslyWithdrawn + tokensRequestedFromStream <= totalTokensStreamed require;
+tokensPreviouslyWithdrawn += tokensRequestedFromStream
+
